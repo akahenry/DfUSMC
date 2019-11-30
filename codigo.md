@@ -1,0 +1,15 @@
+**DfUSMC::FeatureExtractionAndTracking()**
+	- Define a primeira imagem como a de referência
+	- Encontra features potencialmente bons na imagem de referência, que seriam pontos bem definidos (é uma matriz de pontos)
+	- Marca na imagem como circulos vermelhos
+	- Cria uma matriz de booleanos INLIER_MASK para marcar as features que foram encontradas em todas as imagens, começa todos como True
+	- Para cada imagem não de referência:
+		- procura as features na imagem não de referência, devolvendo um booleano que diz se achou, se achou, devolve também as posições.
+		- procura as features na imagem de referência, usando os pontos achados na imagem não de referência
+		- para cada feature:
+			- se a diferença entre a posição da feature e a posição achada pelo último passo for > 0.1, ou se não achou a feature na "ida" ou na "volta":
+				- marca este feature como False na matriz INLIER_MASK
+	- Para cada feature com True na INLIER_MASK:
+		- Marca na imagem de referência com círculos verdes
+	- Exibe imagem de referência com círculos
+	- Muda a matriz de features para ficarem apenas os features achados em todas as imagens

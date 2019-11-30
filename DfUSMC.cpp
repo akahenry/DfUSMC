@@ -1,11 +1,3 @@
-//
-//  DfUSMC.cpp
-//  DfUSMC
-//
-//  Created by Hyowon Ha on 2016. 6. 11..
-//  Copyright © 2016 Hyowon Ha. All rights reserved.
-//
-
 #include "DfUSMC.hpp"
 
 void DfUSMC::LoadSmallMotionClip(char *fullpath)
