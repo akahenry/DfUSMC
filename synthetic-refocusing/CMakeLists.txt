@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 2.8)
+project( refocusTest )
+SET(TARGET_H refocusing.hpp)
+SET(TARGET_SRC refocusing.cpp)
+find_package( OpenCV REQUIRED )
+include_directories( ${OpenCV_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
+add_executable( refocusTest refocusTest.cpp refocusing.cpp)
+target_link_libraries( refocusTest ${OpenCV_LIBS})
