@@ -20,62 +20,66 @@ void Refocusing::LoadDepthImage(string filename)
     depthMapImage = imread(filename, CV_LOAD_IMAGE_GRAYSCALE);
 }
 
+Mat Refocusing::MultMatrices(Mat nChannelsMatrix, Mat singleChannelMatrix)
+{
+    vector<Mat> channels;
+    Mat result;
+    split(nChannelsMatrix, channels);
+
+    for(int c = 0; c < channels.size(); c++)
+    {
+        channels[c] = channels[c].mul(singleChannelMatrix);
+    }
+
+    merge(channels, result);
+
+    return result;
+}
+
+Mat Refocusing::CreateMask(float threshold, int option)
+{
+    Mat mask;
+    mask = depthMapImage.clone();
+    cv::threshold(mask, mask, threshold, 1, option);
+    return mask;
+}
+
+Mat Refocusing::CreateMask(int option)
+{
+    return CreateMask(127, option);
+}
+
 Mat Refocusing::CreateMask(float threshold)
 {
-    Mat mask(depthMapImage.size(), CV_16S);
-    vector<Mat> chans;
-    for(int i = 0; i < depthMapImage.size().height; i++)
-    {
-        for(int j = 0; j < depthMapImage.size().width; j++)
-        {
-            if(depthMapImage.at<float>(i,j) < threshold)
-            {
-                mask.at<float>(i,j) = 1;
-            }
-            else
-            {
-                mask.at<float>(i,j) = 0;
-            }
-        }
-    }
-    for(int i = 0; i < 3; i++)
-        chans.push_back(mask.clone());
-    cv::merge(chans, mask);
-    return mask; 
+    return CreateMask(threshold, CV_THRESH_BINARY);
 }
 
 Mat Refocusing::CreateMask()
 {
-    return CreateMask(50);
+    return CreateMask(127, CV_THRESH_BINARY);
 }
 
 void Refocusing::RefocusThreshold(float threshold)
 {
-    Mat blurred, nonBlurred, mask;
-    mask = CreateMask(threshold);
-    cout << "Criei a mascara" << endl;
+    Mat blurred, nonBlurred, mask, invMask;
+    double min, max;
 
-    GaussianBlur(refImage, blurred, Size(13, 13), 0, 0);
+    nonBlurred = refImage.clone();
 
-    cout << "Tipo da imagem: " << refImage.type() << endl;
+    mask = CreateMask(threshold, CV_THRESH_BINARY_INV);
+    invMask = CreateMask(threshold, CV_THRESH_BINARY);
 
-    namedWindow("mask");
-    imshow("mask", mask);
-    cout << "Criei a imagem borrada" << endl;
-    blurred = blurred.mul(mask);
-    namedWindow("blurred");
-    imshow("blurred", blurred);
-    cout << "Criei a parte borrada" << endl;
-    nonBlurred = refImage.mul(mask);
-    namedWindow("nonblurred");
-    imshow("nonblurred", nonBlurred);
+    GaussianBlur(refImage, blurred, Size(23, 23), 0, 0);
 
-    waitKey(0);
+    blurred = MultMatrices(blurred, mask);
+    imwrite("blurred.jpg", blurred);
+    nonBlurred = MultMatrices(nonBlurred, invMask);
+    imwrite("nonblurred.jpg", nonBlurred);
 
     resultImage = blurred + nonBlurred;
 }
 
-Mat Refocusing::getGaussianKernel(int rows, int cols, double sigmax, double sigmay)
+Mat Refocusing::GetGaussianKernel(int rows, int cols, double sigmax, double sigmay)
 {
     auto gauss_x = cv::getGaussianKernel(cols, sigmax, CV_32F);
     auto gauss_y = cv::getGaussianKernel(rows, sigmay, CV_32F);
@@ -101,7 +105,7 @@ int Refocusing::ApplyGaussianToPixel(Point2i point, Mat kernel, Mat image, Size2
             if(xmin + j < 0 || xmin + j >= imageSize.width)
                 continue;
 
-            ac += image.at<float>(ymin + i, xmin + j)*(kernel.at<float>(i, j));
+            ac += image.at<float>(ymin + i, xmin + j, 0)*(kernel.at<float>(i, j, 0));
         }
     }
     image.at<int>(point.y, point.x) = round(ac);
@@ -114,7 +118,7 @@ void Refocusing::RefocusDynamic(float threshold)
 {
     Size2i imageSize = refImage.size();
     vector<Mat> channels;
-    int kernelSize = 3;
+    int kernelSize = 9;
     Mat gaussianKernel;
 
     cout << "Criei variaveis" << endl;
@@ -128,7 +132,7 @@ void Refocusing::RefocusDynamic(float threshold)
         for(int j = 0; j < imageSize.width; j++)
         {
             // kernelSize = std::abs(-depthMapImage.at<int>(i,j) + 255 - threshold);
-            gaussianKernel = Refocusing::getGaussianKernel(kernelSize, kernelSize, -1, -1);
+            gaussianKernel = Refocusing::GetGaussianKernel(kernelSize, kernelSize, -1, -1);
 
             ApplyGaussianToPixel(Point2i(j, i), gaussianKernel, resultImage, Size2i(kernelSize, kernelSize));
         }
@@ -150,6 +154,7 @@ void Refocusing::Refocus(int option, float threshold)
     }
     namedWindow("Refocused image");
     imshow("Refocused image", resultImage);
+    imwrite("refocused.jpg", resultImage);
 }
 
 void Refocusing::Refocus(int option)

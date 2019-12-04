@@ -24,8 +24,11 @@ public:
     void Refocus(int option, float threshold);
 
 private:
-    Mat getGaussianKernel(int rows, int cols, double sigmax, double sigmay);
+    Mat MultMatrices(Mat nChannelsMatrix, Mat singleChannelMatrix);
+    Mat GetGaussianKernel(int rows, int cols, double sigmax, double sigmay);
     int ApplyGaussianToPixel(Point2i point, Mat kernel, Mat image, Size2i kernelSize);
+    Mat CreateMask(float threshold, int option);
+    Mat CreateMask(int option);
     Mat CreateMask(float threshold);
     Mat CreateMask();
     void RefocusThreshold(float threshold);

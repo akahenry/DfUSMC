@@ -7,11 +7,11 @@ int main()
     Refocusing syntheticRefocus;
 
     cout << "Criei o objeto" << endl;
-    syntheticRefocus.LoadDepthImage("Stairs_Refined.bmp");
+    syntheticRefocus.LoadDepthImage("Sherlock_Refined.bmp");
     cout << "Li a profundidade" << endl;
-    syntheticRefocus.LoadReferenceImage("Stairs_ref.bmp");
+    syntheticRefocus.LoadReferenceImage("Sherlock_ref.bmp");
     cout << "Li a imagem de referencia" << endl;
-    syntheticRefocus.Refocus(REFOCUSING_DYNAMIC);
+    syntheticRefocus.Refocus(REFOCUSING_THRESHOLD, 80);
     cout << "Fiz o refocus" << endl;
 
     cv::waitKey(0);
